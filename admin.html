@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Skyro-X Gym</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+    <div class="dashboard-shell">
+        <div class="dashboard-header">
+            <div>
+                <p class="eyebrow">Skyro-X Gym</p>
+                <h1>Admin Dashboard</h1>
+                <p id="adminWelcome" class="muted">Checking admin access...</p>
+            </div>
+            <button id="logoutBtn" class="action-btn">Logout</button>
+        </div>
+
+        <div class="form-card">
+            <div class="form-head">
+                <div>
+                    <p class="eyebrow">Manual Entry</p>
+                    <h2>Add Physical Register Member</h2>
+                    <p class="muted">Agar koi member ka record register me hai, to usko yahan se manually add ya update kar sakte ho.</p>
+                </div>
+            </div>
+
+            <form id="manualMemberForm" class="member-form">
+                <div class="field">
+                    <label for="memberName">Full Name</label>
+                    <input type="text" id="memberName" required>
+                </div>
+                <div class="field">
+                    <label for="memberEmail">Email ID</label>
+                    <input type="email" id="memberEmail" required>
+                </div>
+                <div class="field">
+                    <label for="memberPhone">Contact Number</label>
+                    <input type="text" id="memberPhone" required>
+                </div>
+                <div class="field">
+                    <label for="memberPlan">Plan</label>
+                    <select id="memberPlan" required>
+                        <option value="">Select Plan</option>
+                        <option value="1 Month">1 Month</option>
+                        <option value="3 Months">3 Months</option>
+                        <option value="6 Months">6 Months</option>
+                        <option value="1 Year">1 Year</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="memberStart">Subscription Start</label>
+                    <input type="date" id="memberStart" required>
+                </div>
+                <div class="field">
+                    <label for="memberEnd">Subscription End</label>
+                    <input type="date" id="memberEnd" required>
+                </div>
+                <div class="field">
+                    <label for="memberAdmission">Admission Date</label>
+                    <input type="date" id="memberAdmission" required>
+                </div>
+                <div class="field submit-field">
+                    <button type="submit" class="action-btn">Save Member</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="table-card">
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Contact</th>
+                            <th>Status</th>
+                            <th>Plan</th>
+                            <th>Subscription</th>
+                            <th>Admission Date</th>
+                            <th>Account Created</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="membersBody">
+                        <tr>
+                            <td colspan="9">Loading accounts...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const userRole = localStorage.getItem("userRole");
+        const userEmail = localStorage.getItem("userEmail");
+        const userName = localStorage.getItem("userName");
+
+        if (userRole !== "admin" || !userEmail) {
+            window.location.href = "admin-login.html";
+        }
+
+        document.getElementById("adminWelcome").textContent = `Hello ${userName || "Admin"}, here you can check all created client accounts and memberships.`;
+
+        document.getElementById("logoutBtn").addEventListener("click", () => {
+            localStorage.removeItem("userEmail");
+            localStorage.removeItem("userName");
+            localStorage.removeItem("userRole");
+            localStorage.removeItem("isAdmitted");
+            window.location.href = "admin-login.html";
+        });
+
+        function formatDate(value) {
+            if (!value) {
+                return "N/A";
+            }
+
+            const date = new Date(value);
+            return Number.isNaN(date.getTime()) ? "N/A" : date.toLocaleDateString();
+        }
+
+        async function readResponse(res) {
+            const text = await res.text();
+
+            try {
+                return JSON.parse(text);
+            } catch (error) {
+                return {
+                    message: text.includes("<!DOCTYPE")
+                        ? "Server route not available. Restart backend server and try again."
+                        : text || "Unexpected server response."
+                };
+            }
+        }
+
+        function isExpired(value) {
+            if (!value) {
+                return false;
+            }
+
+            const endDate = new Date(value);
+
+            if (Number.isNaN(endDate.getTime())) {
+                return false;
+            }
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            endDate.setHours(0, 0, 0, 0);
+
+            return endDate < today;
+        }
+
+        function calculateEndDate(startValue, planValue) {
+            if (!startValue || !planValue) {
+                return "";
+            }
+
+            const planMonths = {
+                "1 Month": 1,
+                "3 Months": 3,
+                "6 Months": 6,
+                "1 Year": 12
+            };
+
+            const startDate = new Date(startValue);
+            const monthsToAdd = planMonths[planValue];
+
+            if (Number.isNaN(startDate.getTime()) || !monthsToAdd) {
+                return "";
+            }
+
+            startDate.setMonth(startDate.getMonth() + monthsToAdd);
+            return startDate.toISOString().split("T")[0];
+        }
+
+        const memberPlanInput = document.getElementById("memberPlan");
+        const memberStartInput = document.getElementById("memberStart");
+        const memberEndInput = document.getElementById("memberEnd");
+
+        function syncMemberEndDate() {
+            const calculatedDate = calculateEndDate(memberStartInput.value, memberPlanInput.value);
+            if (calculatedDate) {
+                memberEndInput.value = calculatedDate;
+            }
+        }
+
+        memberPlanInput.addEventListener("change", syncMemberEndDate);
+        memberStartInput.addEventListener("change", syncMemberEndDate);
+
+        async function removeMember(email) {
+            const confirmed = window.confirm(`Remove member record for ${email}?`);
+
+            if (!confirmed) {
+                return;
+            }
+
+            try {
+                const res = await fetch(`http://localhost:5000/admin/members/${encodeURIComponent(email)}`, {
+                    method: "DELETE",
+                    headers: {
+                        "x-admin-email": userEmail
+                    }
+                });
+
+                const data = await readResponse(res);
+
+                if (!res.ok) {
+                    throw new Error(data.message || "Could not remove member.");
+                }
+
+                alert(data.message);
+                loadMembers();
+            } catch (error) {
+                console.error(error);
+                alert(error.message);
+            }
+        }
+
+        document.getElementById("manualMemberForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const payload = {
+                name: document.getElementById("memberName").value.trim(),
+                email: document.getElementById("memberEmail").value.trim(),
+                phone: document.getElementById("memberPhone").value.trim(),
+                plan: document.getElementById("memberPlan").value,
+                subscriptionStart: document.getElementById("memberStart").value,
+                subscriptionEnd: document.getElementById("memberEnd").value,
+                admissionDate: document.getElementById("memberAdmission").value
+            };
+
+            try {
+                const res = await fetch("http://localhost:5000/admin/members", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "x-admin-email": userEmail
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await readResponse(res);
+
+                if (!res.ok) {
+                    throw new Error(data.message || "Could not save member.");
+                }
+
+                alert(data.message);
+                document.getElementById("manualMemberForm").reset();
+                loadMembers();
+            } catch (error) {
+                console.error(error);
+                alert(error.message);
+            }
+        });
+
+        async function loadMembers() {
+            try {
+                const res = await fetch("http://localhost:5000/members", {
+                    headers: {
+                        "x-admin-email": userEmail
+                    }
+                });
+
+                const data = await readResponse(res);
+
+                if (!res.ok) {
+                    throw new Error(data.message || "Unable to load members.");
+                }
+
+                const tbody = document.getElementById("membersBody");
+
+                if (!data.members.length) {
+                    tbody.innerHTML = '<tr><td colspan="9">No client accounts found yet.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = data.members.map(member => {
+                    const expired = isExpired(member.subscriptionEnd);
+                    const statusMarkup = member.isAdmitted
+                        ? `<span class="status-badge ${expired ? "expired-badge" : "active-badge"}">${expired ? "Expired" : "Admitted"}</span>`
+                        : '<span class="status-badge pending-badge">Account Only</span>';
+
+                    return `
+                    <tr class="${expired ? "expired-row" : ""}">
+                        <td>${member.name}</td>
+                        <td>${member.email}</td>
+                        <td>${member.phone || "N/A"}</td>
+                        <td>${statusMarkup}</td>
+                        <td>${member.plan || "N/A"}</td>
+                        <td>
+                            ${member.isAdmitted ? `${formatDate(member.subscriptionStart)} - ${formatDate(member.subscriptionEnd)}` : 'Not admitted yet'}
+                        </td>
+                        <td>${formatDate(member.admissionDate)}</td>
+                        <td>${formatDate(member.accountCreatedAt)}</td>
+                        <td><button class="delete-btn" onclick="removeMember('${member.email}')">Remove</button></td>
+                    </tr>
+                `;
+                }).join("");
+            } catch (error) {
+                console.error(error);
+                document.getElementById("membersBody").innerHTML = `<tr><td colspan="9">${error.message}</td></tr>`;
+            }
+        }
+
+        window.removeMember = removeMember;
+        loadMembers();
+    </script>
+</body>
+</html>

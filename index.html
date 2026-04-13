@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skyro-X Gym</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <nav>
+            <a href="#home" class="logo">
+                <img src="assets/skyro-x-logo.png" alt="Skyro-X Gym logo">
+                <div class="brand-copy">
+                    <span class="brand-main">SKYRO-X</span>
+                    <span class="brand-sub">GYM</span>
+                </div>
+            </a>
+
+            <ul class="nav-links">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#programs">Programs</a></li>
+                <li><a href="#workouts">Workouts</a></li>
+                <li><a href="#contact">Contact</a></li>
+                <li id="userAreaMenu"></li>
+            </ul>
+
+            <div id="userStatus" class="nav-status-area"></div>
+
+            <div class="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </nav>
+    </header>
+
+    <section id="home" class="hero">
+        <h1>Build Power At Skyro-X Gym</h1>
+        <p>Train harder with elite gym programs, strength routines, and a high-performance mindset.</p>
+        <a href="#programs" class="cta-button">Start Your Journey</a>
+    </section>
+
+    <section id="programs">
+        <div class="section-intro">
+            <h2>Elite Training Programs</h2>
+            <p class="section-copy">Discover premium training options crafted to build strength, stamina, flexibility, and complete body transformation.</p>
+        </div>
+        <div class="pricing-panel program-list-panel">
+            <div class="pricing-grid">
+                <div class="price-card">
+                    <span class="price-label">Program</span>
+                    <strong>Rope Climbing</strong>
+                </div>
+                <div class="price-card">
+                    <span class="price-label">Program</span>
+                    <strong>Calisthenics</strong>
+                </div>
+                <div class="price-card">
+                    <span class="price-label">Program</span>
+                    <strong>Zumba</strong>
+                </div>
+                <div class="price-card">
+                    <span class="price-label">Program</span>
+                    <strong>Full Body Workout</strong>
+                </div>
+                <div class="price-card">
+                    <span class="price-label">Program</span>
+                    <strong>Certified Trainer</strong>
+                </div>
+                <div class="price-card featured">
+                    <span class="price-label">Program</span>
+                    <strong>Yoga And Many More</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="pricing-panel">
+            <div class="pricing-intro">
+                <p class="section-tag">Fee Structure</p>
+                <h3>Affordable Plans For Every Goal</h3>
+                <p>Join Skyro-X Gym with a one-time registration and choose the package that fits your transformation journey.</p>
+            </div>
+
+            <div class="pricing-grid">
+                <div class="price-card">
+                    <span class="price-label">Registration</span>
+                    <strong>Rs. 1000</strong>
+                </div>
+                <div class="price-card">
+                    <span class="price-label">1 Month</span>
+                    <strong>Rs. 500</strong>
+                </div>
+                <div class="price-card">
+                    <span class="price-label">3 Months</span>
+                    <strong>Rs. 1400</strong>
+                </div>
+                <div class="price-card">
+                    <span class="price-label">6 Months</span>
+                    <strong>Rs. 2700</strong>
+                </div>
+                <div class="price-card featured">
+                    <span class="price-label">1 Year</span>
+                    <strong>Rs. 4800</strong>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer id="contact">
+        <div class="footer-brand">
+            <img src="assets/skyro-x-logo.png" alt="Skyro-X Gym logo">
+            <div class="brand-copy">
+                <span class="brand-main">SKYRO-X</span>
+                <span class="brand-sub">GYM</span>
+            </div>
+        </div>
+        <p>&copy; 2026 All rights reserved.</p>
+    </footer>
+
+    <script>
+        const userEmail = localStorage.getItem("userEmail");
+        const userName = localStorage.getItem("userName");
+        const userRole = localStorage.getItem("userRole");
+        const isAdmitted = localStorage.getItem("isAdmitted") === "true";
+        const navLinks = document.querySelector(".nav-links");
+        const hamburger = document.querySelector(".hamburger");
+        const userAreaMenu = document.getElementById("userAreaMenu");
+        const userStatus = document.getElementById("userStatus");
+
+        const firstInitial = (userName || "Member").trim().charAt(0).toUpperCase();
+
+        function getRemainingDays(endDateValue) {
+            if (!endDateValue) {
+                return null;
+            }
+
+            const endDate = new Date(endDateValue);
+
+            if (Number.isNaN(endDate.getTime())) {
+                return null;
+            }
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            endDate.setHours(0, 0, 0, 0);
+
+            return Math.ceil((endDate - today) / (1000 * 60 * 60 * 24));
+        }
+
+        async function loadClientMembershipStatus() {
+            if (!userEmail || userRole !== "client") {
+                return;
+            }
+
+            try {
+                const res = await fetch(`http://localhost:5000/user/${encodeURIComponent(userEmail)}`);
+                const data = await res.json();
+
+                if (!res.ok || !data.user) {
+                    return;
+                }
+
+                localStorage.setItem("userName", data.user.name || userName || "Member");
+                localStorage.setItem("isAdmitted", String(data.user.isAdmitted));
+
+                const remainingDays = getRemainingDays(data.user.subscriptionEnd);
+                const membershipMarkup = data.user.isAdmitted && remainingDays !== null
+                    ? `<span class="membership-pill ${remainingDays < 0 ? "expired-pill" : "active-pill"}">${remainingDays < 0 ? "Membership Expired" : `${remainingDays} Days Left`}</span>`
+                    : "";
+
+                const refreshedInitial = (data.user.name || userName || "Member").trim().charAt(0).toUpperCase();
+
+                userStatus.innerHTML = `
+                    <span class="user-greeting">
+                        <span class="user-initial">${refreshedInitial}</span>
+                        <span class="user-greeting-text">Hello ${refreshedInitial}</span>
+                    </span>
+                    ${membershipMarkup}
+                    <a class="user-action-link polished-link" href="admission.html">${data.user.isAdmitted ? "Admission Details" : "Take Admission"}</a>
+                    <button onclick="logout()" class="nav-logout-btn">Logout</button>
+                `;
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        if (userEmail && userRole === "client") {
+            userAreaMenu.innerHTML = ``;
+            userStatus.innerHTML = `
+                <span class="user-greeting">
+                    <span class="user-initial">${firstInitial}</span>
+                    <span class="user-greeting-text">Hello ${firstInitial}</span>
+                </span>
+                <a class="user-action-link polished-link" href="admission.html">${isAdmitted ? "Admission Details" : "Take Admission"}</a>
+                <button onclick="logout()" class="nav-logout-btn">Logout</button>
+            `;
+            loadClientMembershipStatus();
+        } else if (userEmail && userRole === "admin") {
+            userAreaMenu.innerHTML = ``;
+            userStatus.innerHTML = `
+                <a class="user-action-link" href="admin.html">Admin Panel</a>
+                <button onclick="logout()" class="nav-logout-btn">Logout</button>
+            `;
+        } else {
+            userStatus.innerHTML = ``;
+            userAreaMenu.innerHTML = `
+                <a href="login.html">Login</a>
+            `;
+        }
+
+        function logout() {
+            localStorage.removeItem("userEmail");
+            localStorage.removeItem("userName");
+            localStorage.removeItem("userRole");
+            localStorage.removeItem("isAdmitted");
+            window.location.reload();
+        }
+
+        if (hamburger && navLinks) {
+            hamburger.addEventListener("click", () => {
+                hamburger.classList.toggle("active");
+                navLinks.classList.toggle("mobile-menu-open");
+            });
+        }
+
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                const target = document.querySelector(this.getAttribute('href'));
+
+                if (!target) {
+                    return;
+                }
+
+                e.preventDefault();
+                target.scrollIntoView({
+                    behavior: 'smooth'
+                });
+
+                if (navLinks && hamburger) {
+                    navLinks.classList.remove("mobile-menu-open");
+                    hamburger.classList.remove("active");
+                }
+            });
+        });
+
+        window.addEventListener("resize", () => {
+            if (window.innerWidth > 768 && navLinks && hamburger) {
+                navLinks.classList.remove("mobile-menu-open");
+                hamburger.classList.remove("active");
+            }
+        });
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - Skyro-X Gym</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="login.css">
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">
+            <img src="assets/skyro-x-logo.png" alt="Skyro-X Gym logo">
+            <h1><span>Admin</span> Login</h1>
+        </div>
+
+        <form id="adminLoginForm">
+            <div class="form-group">
+                <input type="email" id="email" placeholder="Admin Email" required>
+                <i class="fas fa-envelope"></i>
+            </div>
+
+            <div class="form-group">
+                <input type="password" id="password" placeholder="Password" required>
+                <i class="fas fa-lock"></i>
+            </div>
+
+            <button type="submit" class="login-btn">
+                <i class="fas fa-user-shield"></i> Admin Login
+            </button>
+        </form>
+
+        <div class="register-link">
+            <p>Back to client login</p>
+            <a href="login.html">Open Client Login</a>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById("adminLoginForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const email = document.getElementById("email").value.trim();
+            const password = document.getElementById("password").value;
+
+            try {
+                const res = await fetch("http://localhost:5000/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    alert(data.message || "Admin login failed.");
+                    return;
+                }
+
+                if (data.user.role !== "admin") {
+                    alert("This account is not an admin account.");
+                    return;
+                }
+
+                localStorage.setItem("userEmail", data.user.email);
+                localStorage.setItem("userName", data.user.name);
+                localStorage.setItem("userRole", data.user.role);
+                localStorage.setItem("isAdmitted", String(data.user.isAdmitted));
+                window.location.href = "admin.html";
+            } catch (error) {
+                console.error(error);
+                alert("Server error.");
+            }
+        });
+    </script>
+</body>
+</html>
