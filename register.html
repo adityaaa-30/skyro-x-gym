@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register - Skyro-X Gym</title>
-
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -12,14 +11,12 @@
     <link rel="stylesheet" href="register.css">
 </head>
 <body>
-
     <div class="login-container">
         <div class="logo">
             <img src="assets/skyro-x-logo.png" alt="Skyro-X Gym logo">
             <h1><span>Skyro-X</span> Gym</h1>
         </div>
 
-        <!-- ✅ REGISTER FORM -->
         <form id="registerForm">
             <div class="form-group">
                 <input type="text" id="name" placeholder="Full Name" required>
@@ -44,25 +41,13 @@
             <button type="submit" class="login-btn">
                 <i class="fas fa-user-plus"></i> Create Account
             </button>
-
         </form>
-
-        <div class="divider">
-            <span>or continue with</span>
-        </div>
-
-        <div class="social-login">
-            <a href="#" class="social-btn">
-                <i class="fab fa-google"></i> Google
-            </a>
-            <a href="#" class="social-btn">
-                <i class="fab fa-facebook-f"></i> Facebook
-            </a>
-        </div>
     </div>
 
-    <!-- ✅ REGISTER SCRIPT -->
+    <script src="api-config.js?v=5"></script>
     <script>
+        const API_BASE_URL = window.API_BASE_URL || "http://localhost:5000";
+
         document.getElementById("registerForm").addEventListener("submit", async (e) => {
             e.preventDefault();
 
@@ -72,7 +57,7 @@
             const name = document.getElementById("name").value;
 
             try {
-                const res = await fetch("http://localhost:5000/register", {
+                const res = await fetch(`${API_BASE_URL}/register`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
@@ -81,20 +66,16 @@
                 });
 
                 const data = await res.json();
-
                 alert(data.message || "Registration completed.");
 
-                // success pe login page redirect
                 if (res.ok) {
                     window.location.href = "login.html";
                 }
-
             } catch (err) {
                 console.error(err);
-                alert("❌ Server error");
+                alert("Unable to connect to server. Please check backend and Wi-Fi connection.");
             }
         });
     </script>
-
 </body>
 </html>

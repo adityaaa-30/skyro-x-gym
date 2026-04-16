@@ -113,6 +113,27 @@
         </div>
     </section>
 
+    <section id="workouts" class="workouts-section">
+        <div class="section-intro">
+            <h2>Signature Workouts</h2>
+            <p class="section-copy">Push your limits with power-focused sessions designed for strength, conditioning, endurance, and athletic performance.</p>
+        </div>
+        <div class="workout-list">
+            <div class="workout-item">
+                <h3>Strength Circuit</h3>
+                <p>Compound lifts and controlled resistance work for full-body power development.</p>
+            </div>
+            <div class="workout-item">
+                <h3>Fat Burn Blast</h3>
+                <p>High-intensity intervals built to improve stamina and accelerate calorie burn.</p>
+            </div>
+            <div class="workout-item">
+                <h3>Core And Mobility</h3>
+                <p>Targeted core training and flexibility drills for balance, posture, and recovery.</p>
+            </div>
+        </div>
+    </section>
+
     <footer id="contact">
         <div class="footer-brand">
             <img src="assets/skyro-x-logo.png" alt="Skyro-X Gym logo">
@@ -124,7 +145,9 @@
         <p>&copy; 2026 All rights reserved.</p>
     </footer>
 
+    <script src="api-config.js"></script>
     <script>
+        const API_BASE_URL = window.API_BASE_URL || "http://localhost:5000";
         const userEmail = localStorage.getItem("userEmail");
         const userName = localStorage.getItem("userName");
         const userRole = localStorage.getItem("userRole");
@@ -133,8 +156,19 @@
         const hamburger = document.querySelector(".hamburger");
         const userAreaMenu = document.getElementById("userAreaMenu");
         const userStatus = document.getElementById("userStatus");
+        let membershipMenuText = "";
 
-        const firstInitial = (userName || "Member").trim().charAt(0).toUpperCase();
+        function getFirstName(name) {
+            const cleanedName = String(name || "Member").trim();
+            return cleanedName ? cleanedName.split(/\s+/)[0] : "Member";
+        }
+
+        function getInitial(name) {
+            return getFirstName(name).charAt(0).toUpperCase();
+        }
+
+        const firstName = getFirstName(userName);
+        const firstInitial = getInitial(userName);
 
         function getRemainingDays(endDateValue) {
             if (!endDateValue) {
@@ -160,7 +194,7 @@
             }
 
             try {
-                const res = await fetch(`http://localhost:5000/user/${encodeURIComponent(userEmail)}`);
+                const res = await fetch(`${API_BASE_URL}/user/${encodeURIComponent(userEmail)}`);
                 const data = await res.json();
 
                 if (!res.ok || !data.user) {
@@ -174,16 +208,23 @@
                 const membershipMarkup = data.user.isAdmitted && remainingDays !== null
                     ? `<span class="membership-pill ${remainingDays < 0 ? "expired-pill" : "active-pill"}">${remainingDays < 0 ? "Membership Expired" : `${remainingDays} Days Left`}</span>`
                     : "";
+                membershipMenuText = data.user.isAdmitted && remainingDays !== null
+                    ? (remainingDays < 0 ? "Membership Expired" : `Subscription: ${remainingDays} Days Left`)
+                    : "Subscription details unavailable";
 
-                const refreshedInitial = (data.user.name || userName || "Member").trim().charAt(0).toUpperCase();
+                const refreshedName = getFirstName(data.user.name || userName);
+                const refreshedInitial = getInitial(data.user.name || userName);
+
+                userAreaMenu.innerHTML = `
+                    <span class="menu-status-link">${membershipMenuText}</span>
+                `;
 
                 userStatus.innerHTML = `
                     <span class="user-greeting">
                         <span class="user-initial">${refreshedInitial}</span>
-                        <span class="user-greeting-text">Hello ${refreshedInitial}</span>
+                        <span class="user-greeting-text">Hello ${refreshedName}</span>
                     </span>
                     ${membershipMarkup}
-                    <a class="user-action-link polished-link" href="admission.html">${data.user.isAdmitted ? "Admission Details" : "Take Admission"}</a>
                     <button onclick="logout()" class="nav-logout-btn">Logout</button>
                 `;
             } catch (error) {
@@ -192,22 +233,24 @@
         }
 
         if (userEmail && userRole === "client") {
-            userAreaMenu.innerHTML = ``;
+            membershipMenuText = isAdmitted ? "Checking subscription..." : "Not admitted yet";
+            userAreaMenu.innerHTML = `
+                <span class="menu-status-link">${membershipMenuText}</span>
+            `;
             userStatus.innerHTML = `
                 <span class="user-greeting">
                     <span class="user-initial">${firstInitial}</span>
-                    <span class="user-greeting-text">Hello ${firstInitial}</span>
+                    <span class="user-greeting-text">Hello ${firstName}</span>
                 </span>
-                <a class="user-action-link polished-link" href="admission.html">${isAdmitted ? "Admission Details" : "Take Admission"}</a>
                 <button onclick="logout()" class="nav-logout-btn">Logout</button>
             `;
             loadClientMembershipStatus();
         } else if (userEmail && userRole === "admin") {
-            userAreaMenu.innerHTML = ``;
-            userStatus.innerHTML = `
-                <a class="user-action-link" href="admin.html">Admin Panel</a>
-                <button onclick="logout()" class="nav-logout-btn">Logout</button>
+            userAreaMenu.innerHTML = `
+                <a href="admin.html">Admin Panel</a>
+                <a href="#" onclick="logout(); return false;">Logout</a>
             `;
+            userStatus.innerHTML = ``;
         } else {
             userStatus.innerHTML = ``;
             userAreaMenu.innerHTML = `

@@ -70,42 +70,71 @@
             </form>
         </div>
 
-        <div class="table-card">
-            <div class="table-wrap">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Contact</th>
-                            <th>Status</th>
-                            <th>Plan</th>
-                            <th>Subscription</th>
-                            <th>Admission Date</th>
-                            <th>Account Created</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="membersBody">
-                        <tr>
-                            <td colspan="9">Loading accounts...</td>
-                        </tr>
-                    </tbody>
-                </table>
+        <div class="form-card">
+            <div class="form-head">
+                <div>
+                    <p class="eyebrow">Admin Settings</p>
+                    <h2>Change Admin Details</h2>
+                    <p class="muted">Yahan se admin apna naam, email, aur password update kar sakta hai.</p>
+                </div>
+            </div>
+
+            <form id="adminProfileForm" class="member-form">
+                <div class="field">
+                    <label for="adminName">Admin Name</label>
+                    <input type="text" id="adminName" placeholder="New admin name">
+                </div>
+                <div class="field">
+                    <label for="adminEmail">Admin Email</label>
+                    <input type="email" id="adminEmail" placeholder="New admin email">
+                </div>
+                <div class="field">
+                    <label for="currentPassword">Current Password</label>
+                    <input type="password" id="currentPassword" required>
+                </div>
+                <div class="field">
+                    <label for="newPassword">New Password</label>
+                    <input type="password" id="newPassword" placeholder="Leave blank to keep current">
+                </div>
+                <div class="field submit-field">
+                    <button type="submit" class="action-btn">Update Admin</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="table-card members-card">
+            <div class="members-toolbar">
+                <div>
+                    <p class="eyebrow">Client Search</p>
+                    <h2>Registered Clients</h2>
+                </div>
+                <div class="search-box">
+                    <input type="text" id="memberSearch" placeholder="Search by name">
+                </div>
+            </div>
+            <div id="membersList" class="members-list">
+                <p class="empty-state">Loading accounts...</p>
             </div>
         </div>
     </div>
 
+    <script src="api-config.js"></script>
     <script>
+        const API_BASE_URL = window.API_BASE_URL || "http://localhost:5000";
         const userRole = localStorage.getItem("userRole");
         const userEmail = localStorage.getItem("userEmail");
         const userName = localStorage.getItem("userName");
+        const memberSearchInput = document.getElementById("memberSearch");
+        const membersList = document.getElementById("membersList");
+        let allMembers = [];
 
         if (userRole !== "admin" || !userEmail) {
             window.location.href = "admin-login.html";
         }
 
         document.getElementById("adminWelcome").textContent = `Hello ${userName || "Admin"}, here you can check all created client accounts and memberships.`;
+        document.getElementById("adminName").value = userName || "";
+        document.getElementById("adminEmail").value = userEmail || "";
 
         document.getElementById("logoutBtn").addEventListener("click", () => {
             localStorage.removeItem("userEmail");
@@ -122,6 +151,16 @@
 
             const date = new Date(value);
             return Number.isNaN(date.getTime()) ? "N/A" : date.toLocaleDateString();
+        }
+
+        function getStatusMarkup(member) {
+            const expired = isExpired(member.subscriptionEnd);
+
+            if (!member.isAdmitted) {
+                return '<span class="status-badge pending-badge">Account Only</span>';
+            }
+
+            return `<span class="status-badge ${expired ? "expired-badge" : "active-badge"}">${expired ? "Expired" : "Admitted"}</span>`;
         }
 
         async function readResponse(res) {
@@ -201,7 +240,7 @@
             }
 
             try {
-                const res = await fetch(`http://localhost:5000/admin/members/${encodeURIComponent(email)}`, {
+                const res = await fetch(`${API_BASE_URL}/admin/members/${encodeURIComponent(email)}`, {
                     method: "DELETE",
                     headers: {
                         "x-admin-email": userEmail
@@ -212,6 +251,31 @@
 
                 if (!res.ok) {
                     throw new Error(data.message || "Could not remove member.");
+                }
+
+                alert(data.message);
+                loadMembers();
+            } catch (error) {
+                console.error(error);
+                alert(error.message);
+            }
+        }
+
+        async function extendMember(email, months) {
+            try {
+                const res = await fetch(`${API_BASE_URL}/admin/members/${encodeURIComponent(email)}/extend`, {
+                    method: "PATCH",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "x-admin-email": userEmail
+                    },
+                    body: JSON.stringify({ months })
+                });
+
+                const data = await readResponse(res);
+
+                if (!res.ok) {
+                    throw new Error(data.message || "Could not extend subscription.");
                 }
 
                 alert(data.message);
@@ -236,7 +300,7 @@
             };
 
             try {
-                const res = await fetch("http://localhost:5000/admin/members", {
+                const res = await fetch(`${API_BASE_URL}/admin/members`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -260,9 +324,116 @@
             }
         });
 
+        document.getElementById("adminProfileForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const payload = {
+                name: document.getElementById("adminName").value.trim(),
+                email: document.getElementById("adminEmail").value.trim(),
+                currentPassword: document.getElementById("currentPassword").value,
+                newPassword: document.getElementById("newPassword").value
+            };
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/admin/profile`, {
+                    method: "PATCH",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "x-admin-email": userEmail
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await readResponse(res);
+
+                if (!res.ok) {
+                    throw new Error(data.message || "Could not update admin profile.");
+                }
+
+                localStorage.setItem("userEmail", data.user.email);
+                localStorage.setItem("userName", data.user.name);
+                alert(data.message);
+                window.location.reload();
+            } catch (error) {
+                console.error(error);
+                alert(error.message);
+            }
+        });
+
+        function renderMembers() {
+            const searchValue = memberSearchInput.value.trim().toLowerCase();
+            const filteredMembers = allMembers.filter((member) => String(member.name || "").toLowerCase().includes(searchValue));
+
+            if (!filteredMembers.length) {
+                membersList.innerHTML = '<p class="empty-state">No matching client found.</p>';
+                return;
+            }
+
+            membersList.innerHTML = filteredMembers.map((member, index) => {
+                const expired = isExpired(member.subscriptionEnd);
+
+                return `
+                    <article class="member-item ${expired ? "expired-row" : ""}">
+                        <button class="member-summary" type="button" data-member-toggle="${index}">
+                            <div>
+                                <h3>${member.name}</h3>
+                                <p>${member.phone || "No contact number"}</p>
+                            </div>
+                            <span class="member-summary-meta">
+                                ${getStatusMarkup(member)}
+                                <span class="expand-icon">Details</span>
+                            </span>
+                        </button>
+                        <div class="member-details" data-member-panel="${index}">
+                            <div class="detail-grid">
+                                <div class="detail-box">
+                                    <span>Email</span>
+                                    <strong>${member.email}</strong>
+                                </div>
+                                <div class="detail-box">
+                                    <span>Plan</span>
+                                    <strong>${member.plan || "N/A"}</strong>
+                                </div>
+                                <div class="detail-box">
+                                    <span>Subscription</span>
+                                    <strong>${member.isAdmitted ? `${formatDate(member.subscriptionStart)} - ${formatDate(member.subscriptionEnd)}` : "Not admitted yet"}</strong>
+                                </div>
+                                <div class="detail-box">
+                                    <span>Admission Date</span>
+                                    <strong>${formatDate(member.admissionDate)}</strong>
+                                </div>
+                                <div class="detail-box">
+                                    <span>Account Created</span>
+                                    <strong>${formatDate(member.accountCreatedAt)}</strong>
+                                </div>
+                                <div class="detail-box">
+                                    <span>Status</span>
+                                    <strong>${member.isAdmitted ? (expired ? "Expired" : "Active") : "Account Only"}</strong>
+                                </div>
+                            </div>
+                            <div class="member-actions">
+                                <button class="secondary-action-btn" type="button" onclick="extendMember('${member.email}', 1)">Extend 1 Month</button>
+                                <button class="secondary-action-btn" type="button" onclick="extendMember('${member.email}', 3)">Extend 3 Months</button>
+                                <button class="delete-btn" type="button" onclick="removeMember('${member.email}')">Remove</button>
+                            </div>
+                        </div>
+                    </article>
+                `;
+            }).join("");
+
+            document.querySelectorAll("[data-member-toggle]").forEach((toggleButton) => {
+                toggleButton.addEventListener("click", () => {
+                    const panel = document.querySelector(`[data-member-panel="${toggleButton.dataset.memberToggle}"]`);
+                    const parent = toggleButton.closest(".member-item");
+                    panel.classList.toggle("open");
+                    parent.classList.toggle("open");
+                });
+            });
+        }
+
         async function loadMembers() {
             try {
-                const res = await fetch("http://localhost:5000/members", {
+                const res = await fetch(`${API_BASE_URL}/members`, {
                     headers: {
                         "x-admin-email": userEmail
                     }
@@ -274,42 +445,23 @@
                     throw new Error(data.message || "Unable to load members.");
                 }
 
-                const tbody = document.getElementById("membersBody");
+                allMembers = data.members || [];
 
-                if (!data.members.length) {
-                    tbody.innerHTML = '<tr><td colspan="9">No client accounts found yet.</td></tr>';
+                if (!allMembers.length) {
+                    membersList.innerHTML = '<p class="empty-state">No client accounts found yet.</p>';
                     return;
                 }
 
-                tbody.innerHTML = data.members.map(member => {
-                    const expired = isExpired(member.subscriptionEnd);
-                    const statusMarkup = member.isAdmitted
-                        ? `<span class="status-badge ${expired ? "expired-badge" : "active-badge"}">${expired ? "Expired" : "Admitted"}</span>`
-                        : '<span class="status-badge pending-badge">Account Only</span>';
-
-                    return `
-                    <tr class="${expired ? "expired-row" : ""}">
-                        <td>${member.name}</td>
-                        <td>${member.email}</td>
-                        <td>${member.phone || "N/A"}</td>
-                        <td>${statusMarkup}</td>
-                        <td>${member.plan || "N/A"}</td>
-                        <td>
-                            ${member.isAdmitted ? `${formatDate(member.subscriptionStart)} - ${formatDate(member.subscriptionEnd)}` : 'Not admitted yet'}
-                        </td>
-                        <td>${formatDate(member.admissionDate)}</td>
-                        <td>${formatDate(member.accountCreatedAt)}</td>
-                        <td><button class="delete-btn" onclick="removeMember('${member.email}')">Remove</button></td>
-                    </tr>
-                `;
-                }).join("");
+                renderMembers();
             } catch (error) {
                 console.error(error);
-                document.getElementById("membersBody").innerHTML = `<tr><td colspan="9">${error.message}</td></tr>`;
+                membersList.innerHTML = `<p class="empty-state">${error.message}</p>`;
             }
         }
 
+        memberSearchInput.addEventListener("input", renderMembers);
         window.removeMember = removeMember;
+        window.extendMember = extendMember;
         loadMembers();
     </script>
 </body>

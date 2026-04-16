@@ -1,4 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
+    const API_BASE_URL = window.API_BASE_URL || "http://localhost:5000";
     const loginForm = document.getElementById("loginForm");
 
     if (!loginForm) {
@@ -47,6 +48,16 @@ document.addEventListener("DOMContentLoaded", () => {
         el.style.display = "none";
     }
 
+    async function readJsonSafe(res) {
+        const text = await res.text();
+
+        try {
+            return JSON.parse(text);
+        } catch (error) {
+            return { message: text || "Unexpected server response." };
+        }
+    }
+
     function validateEmail() {
         const email = emailInput.value.trim();
         const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -87,7 +98,7 @@ document.addEventListener("DOMContentLoaded", () => {
         loginBtn.disabled = true;
 
         try {
-            const res = await fetch("http://localhost:5000/login", {
+            const res = await fetch(`${API_BASE_URL}/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -96,7 +107,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 })
             });
 
-            const data = await res.json();
+            const data = await readJsonSafe(res);
 
             if (!res.ok) {
                 alert(data.message || "Login failed.");
@@ -118,7 +129,7 @@ document.addEventListener("DOMContentLoaded", () => {
             window.location.href = "index.html";
         } catch (error) {
             console.error(error);
-            alert("Server error");
+            alert("Unable to connect to login server. Phone par use kar rahe ho to backend port 5000 aur same Wi-Fi network check karo.");
         } finally {
             loginBtn.disabled = false;
             loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
