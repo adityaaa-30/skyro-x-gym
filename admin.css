@@ -1,4 +1,5 @@
 :root {
+    /* Admin dashboard color tokens */
     --bg-dark: #05070b;
     --panel: rgba(10, 16, 27, 0.94);
     --blue: #1273ff;
@@ -15,6 +16,7 @@
 }
 
 body {
+    /* Full-page admin dashboard background and spacing */
     font-family: 'Poppins', sans-serif;
     min-height: 100vh;
     background:
@@ -30,6 +32,7 @@ body {
     margin: 0 auto;
 }
 
+/* Shared card surface used by header, forms, and list sections */
 .dashboard-header,
 .info-card,
 .table-card,
@@ -128,6 +131,7 @@ h1 {
     overflow: hidden;
 }
 
+/* Search/filter toolbar above the member records */
 .members-toolbar {
     display: flex;
     justify-content: space-between;
@@ -155,6 +159,7 @@ h1 {
     gap: 14px;
 }
 
+/* Accordion-style member record cards */
 .member-item {
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 18px;
@@ -216,6 +221,7 @@ h1 {
     display: block;
 }
 
+/* Expanded detail area layout inside each member accordion */
 .detail-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -308,6 +314,7 @@ td {
     border-bottom-color: rgba(255, 77, 77, 0.18);
 }
 
+/* Visual labels for active, expired, or account-only members */
 .status-badge {
     display: inline-block;
     margin-left: 10px;
@@ -361,6 +368,7 @@ td {
     color: #0f1218;
 }
 
+/* Mobile dashboard layout stacks controls and member actions vertically */
 @media (max-width: 768px) {
     body {
         padding: 14px;

@@ -11,12 +11,14 @@
     <link rel="stylesheet" href="register.css">
 </head>
 <body>
+    <!-- Registration page creates a new account or links a manual gym record -->
     <div class="login-container">
         <div class="logo">
             <img src="assets/skyro-x-logo.png" alt="Skyro-X Gym logo">
             <h1><span>Skyro-X</span> Gym</h1>
         </div>
 
+        <!-- Client registration form -->
         <form id="registerForm">
             <div class="form-group">
                 <input type="text" id="name" placeholder="Full Name" required>
@@ -44,8 +46,10 @@
         </form>
     </div>
 
+    <!-- Shared API config keeps register requests pointed at the active backend host -->
     <script src="api-config.js?v=5"></script>
     <script>
+        // Submit registration details to backend and redirect to login after success.
         const API_BASE_URL = window.API_BASE_URL || "http://localhost:5000";
 
         document.getElementById("registerForm").addEventListener("submit", async (e) => {

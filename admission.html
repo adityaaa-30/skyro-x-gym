@@ -11,12 +11,14 @@
     <link rel="stylesheet" href="login.css">
 </head>
 <body>
+    <!-- Admission page is used after login to save gym membership details -->
     <div class="login-container">
         <div class="logo">
             <img src="assets/skyro-x-logo.png" alt="Skyro-X Gym logo">
             <h1><span>Gym</span> Admission</h1>
         </div>
 
+        <!-- Form fields combine account info with subscription details -->
         <form id="admissionForm">
             <div class="form-group">
                 <input type="text" id="name" placeholder="Full Name" readonly>
@@ -69,8 +71,10 @@
         </div>
     </div>
 
+    <!-- Shared API config keeps this page connected to the same backend host -->
     <script src="api-config.js"></script>
     <script>
+        // Only logged-in clients should be allowed to use this page.
         const API_BASE_URL = window.API_BASE_URL || "http://localhost:5000";
 
         const name = localStorage.getItem("userName");
@@ -87,6 +91,7 @@
         document.getElementById("admissionDate").value = today;
         document.getElementById("subscriptionStart").value = today;
 
+        // Auto-calculate subscription end date from selected plan duration.
         function calculateEndDate(startValue, planValue) {
             if (!startValue || !planValue) {
                 return "";
@@ -114,6 +119,7 @@
         const startInput = document.getElementById("subscriptionStart");
         const endInput = document.getElementById("subscriptionEnd");
 
+        // Keep the end date field updated whenever plan/start changes.
         function syncEndDate() {
             const calculatedDate = calculateEndDate(startInput.value, planInput.value);
             if (calculatedDate) {
@@ -125,6 +131,7 @@
         startInput.addEventListener("change", syncEndDate);
         syncEndDate();
 
+        // Save admission details in backend and return the client to homepage.
         document.getElementById("admissionForm").addEventListener("submit", async (e) => {
             e.preventDefault();
 

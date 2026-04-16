@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
+    <!-- Main website header with logo, navigation links, user area, and mobile hamburger menu -->
     <header>
         <nav>
             <a href="#home" class="logo">
@@ -41,12 +41,14 @@
         </nav>
     </header>
 
+    <!-- Hero section is the first screen users see on the homepage -->
     <section id="home" class="hero">
         <h1>Build Power At Skyro-X Gym</h1>
         <p>Train harder with elite gym programs, strength routines, and a high-performance mindset.</p>
         <a href="#programs" class="cta-button">Start Your Journey</a>
     </section>
 
+    <!-- Programs section explains training offerings and gym pricing -->
     <section id="programs">
         <div class="section-intro">
             <h2>Elite Training Programs</h2>
@@ -113,6 +115,7 @@
         </div>
     </section>
 
+    <!-- Workouts section highlights example training formats available in the gym -->
     <section id="workouts" class="workouts-section">
         <div class="section-intro">
             <h2>Signature Workouts</h2>
@@ -134,6 +137,7 @@
         </div>
     </section>
 
+    <!-- Footer also acts as the Contact anchor target used in navbar links -->
     <footer id="contact">
         <div class="footer-brand">
             <img src="assets/skyro-x-logo.png" alt="Skyro-X Gym logo">
@@ -145,8 +149,10 @@
         <p>&copy; 2026 All rights reserved.</p>
     </footer>
 
+    <!-- Shared API config builds the backend base URL from the current host -->
     <script src="api-config.js"></script>
     <script>
+        // Read the saved login session so the navbar can change by user role.
         const API_BASE_URL = window.API_BASE_URL || "http://localhost:5000";
         const userEmail = localStorage.getItem("userEmail");
         const userName = localStorage.getItem("userName");
@@ -158,11 +164,13 @@
         const userStatus = document.getElementById("userStatus");
         let membershipMenuText = "";
 
+        // Extract the first word from a full name for cleaner greeting text.
         function getFirstName(name) {
             const cleanedName = String(name || "Member").trim();
             return cleanedName ? cleanedName.split(/\s+/)[0] : "Member";
         }
 
+        // Build the short one-letter avatar badge shown in the navbar.
         function getInitial(name) {
             return getFirstName(name).charAt(0).toUpperCase();
         }
@@ -170,6 +178,7 @@
         const firstName = getFirstName(userName);
         const firstInitial = getInitial(userName);
 
+        // Calculate how many days are left before membership expiry.
         function getRemainingDays(endDateValue) {
             if (!endDateValue) {
                 return null;
@@ -188,6 +197,7 @@
             return Math.ceil((endDate - today) / (1000 * 60 * 60 * 24));
         }
 
+        // Refresh the latest membership details from backend for logged-in clients.
         async function loadClientMembershipStatus() {
             if (!userEmail || userRole !== "client") {
                 return;
@@ -232,6 +242,7 @@
             }
         }
 
+        // Render different navbar states for client, admin, or guest users.
         if (userEmail && userRole === "client") {
             membershipMenuText = isAdmitted ? "Checking subscription..." : "Not admitted yet";
             userAreaMenu.innerHTML = `
@@ -258,6 +269,7 @@
             `;
         }
 
+        // Clear the local session and reload the page into logged-out mode.
         function logout() {
             localStorage.removeItem("userEmail");
             localStorage.removeItem("userName");
@@ -266,6 +278,7 @@
             window.location.reload();
         }
 
+        // Toggle the mobile navigation menu when hamburger is pressed.
         if (hamburger && navLinks) {
             hamburger.addEventListener("click", () => {
                 hamburger.classList.toggle("active");
@@ -273,6 +286,7 @@
             });
         }
 
+        // Smooth-scroll internal section links instead of jumping instantly.
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
                 const target = document.querySelector(this.getAttribute('href'));
@@ -293,6 +307,7 @@
             });
         });
 
+        // Close the open mobile menu automatically on desktop-sized screens.
         window.addEventListener("resize", () => {
             if (window.innerWidth > 768 && navLinks && hamburger) {
                 navLinks.classList.remove("mobile-menu-open");

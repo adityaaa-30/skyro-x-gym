@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="admin.css">
 </head>
 <body>
+    <!-- Admin dashboard page manages members, admin settings, and search -->
     <div class="dashboard-shell">
         <div class="dashboard-header">
             <div>
@@ -20,6 +21,7 @@
             <button id="logoutBtn" class="action-btn">Logout</button>
         </div>
 
+        <!-- Manual entry form for members recorded in the offline register -->
         <div class="form-card">
             <div class="form-head">
                 <div>
@@ -70,6 +72,7 @@
             </form>
         </div>
 
+        <!-- Admin settings form for changing current admin credentials -->
         <div class="form-card">
             <div class="form-head">
                 <div>
@@ -102,6 +105,7 @@
             </form>
         </div>
 
+        <!-- Searchable accordion list for all client records -->
         <div class="table-card members-card">
             <div class="members-toolbar">
                 <div>
@@ -118,8 +122,10 @@
         </div>
     </div>
 
+    <!-- Shared API config keeps admin page requests pointed at the correct backend -->
     <script src="api-config.js"></script>
     <script>
+        // Session details are read from localStorage to protect this page from non-admin access.
         const API_BASE_URL = window.API_BASE_URL || "http://localhost:5000";
         const userRole = localStorage.getItem("userRole");
         const userEmail = localStorage.getItem("userEmail");
@@ -144,6 +150,7 @@
             window.location.href = "admin-login.html";
         });
 
+        // Convert raw dates into readable browser text.
         function formatDate(value) {
             if (!value) {
                 return "N/A";
@@ -153,6 +160,7 @@
             return Number.isNaN(date.getTime()) ? "N/A" : date.toLocaleDateString();
         }
 
+        // Build a colored status badge based on membership state.
         function getStatusMarkup(member) {
             const expired = isExpired(member.subscriptionEnd);
 
@@ -163,6 +171,7 @@
             return `<span class="status-badge ${expired ? "expired-badge" : "active-badge"}">${expired ? "Expired" : "Admitted"}</span>`;
         }
 
+        // Safely parse API responses even if backend returns unexpected text/HTML.
         async function readResponse(res) {
             const text = await res.text();
 
@@ -177,6 +186,7 @@
             }
         }
 
+        // Check whether the membership end date has already passed.
         function isExpired(value) {
             if (!value) {
                 return false;
@@ -195,6 +205,7 @@
             return endDate < today;
         }
 
+        // Auto-fill subscription end date from selected plan duration.
         function calculateEndDate(startValue, planValue) {
             if (!startValue || !planValue) {
                 return "";
@@ -222,6 +233,7 @@
         const memberStartInput = document.getElementById("memberStart");
         const memberEndInput = document.getElementById("memberEnd");
 
+        // Keep the end date synced with plan/start selections.
         function syncMemberEndDate() {
             const calculatedDate = calculateEndDate(memberStartInput.value, memberPlanInput.value);
             if (calculatedDate) {
@@ -232,6 +244,7 @@
         memberPlanInput.addEventListener("change", syncMemberEndDate);
         memberStartInput.addEventListener("change", syncMemberEndDate);
 
+        // Delete a member record after confirmation.
         async function removeMember(email) {
             const confirmed = window.confirm(`Remove member record for ${email}?`);
 
@@ -261,6 +274,7 @@
             }
         }
 
+        // Extend subscription from action buttons inside the member accordion.
         async function extendMember(email, months) {
             try {
                 const res = await fetch(`${API_BASE_URL}/admin/members/${encodeURIComponent(email)}/extend`, {
@@ -286,6 +300,7 @@
             }
         }
 
+        // Submit manual-entry data to backend and refresh the member list.
         document.getElementById("manualMemberForm").addEventListener("submit", async (e) => {
             e.preventDefault();
 
@@ -324,6 +339,7 @@
             }
         });
 
+        // Save admin profile changes and reload page with updated data.
         document.getElementById("adminProfileForm").addEventListener("submit", async (e) => {
             e.preventDefault();
 
@@ -360,6 +376,7 @@
             }
         });
 
+        // Render the searchable accordion list for all client records.
         function renderMembers() {
             const searchValue = memberSearchInput.value.trim().toLowerCase();
             const filteredMembers = allMembers.filter((member) => String(member.name || "").toLowerCase().includes(searchValue));
@@ -431,6 +448,7 @@
             });
         }
 
+        // Fetch the latest members from backend and paint them in the dashboard.
         async function loadMembers() {
             try {
                 const res = await fetch(`${API_BASE_URL}/members`, {

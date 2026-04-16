@@ -6,12 +6,15 @@ const cors = require("cors");
 require("./db");
 
 const app = express();
+// Enable JSON parsing and cross-origin frontend requests.
 app.use(express.json());
 app.use(cors());
 
+// Default admin credentials seeded into MongoDB on first run.
 const ADMIN_EMAIL = "admin@skyroxgym.com";
 const ADMIN_PASSWORD = "admin123";
 
+// Main schema for both client and admin users, including membership details.
 const userSchema = new mongoose.Schema({
     name: { type: String, required: true, trim: true },
     email: { type: String, unique: true, required: true, trim: true, lowercase: true },
@@ -30,6 +33,7 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model("User", userSchema);
 
+// Keep the API response clean by exposing only frontend-needed fields.
 function serializeUser(user) {
     return {
         id: user._id,
@@ -47,6 +51,7 @@ function serializeUser(user) {
     };
 }
 
+// Create the default admin account if the database is empty.
 async function ensureAdminUser() {
     const existingAdmin = await User.findOne({ email: ADMIN_EMAIL });
 
@@ -71,26 +76,31 @@ async function ensureAdminUser() {
     console.log(`Admin ready: ${ADMIN_EMAIL}`);
 }
 
+// Turn string input into a Date object only when valid.
 function normalizeDate(value) {
     if (!value) return null;
     const date = new Date(value);
     return Number.isNaN(date.getTime()) ? null : date;
 }
 
+// Normalize emails to lowercase for consistent matching.
 function normalizeEmail(value) {
     return String(value || "").trim().toLowerCase();
 }
 
+// Add fixed membership duration months to a date.
 function addMonths(baseDate, months) {
     const result = new Date(baseDate);
     result.setMonth(result.getMonth() + months);
     return result;
 }
 
+// Manual-entry members get a temporary password until they self-register.
 function createTemporaryPassword() {
     return `skyrox-${Math.random().toString(36).slice(2, 10)}`;
 }
 
+// Admin routes use this helper to verify the acting admin from request headers.
 async function getAdminFromHeader(req) {
     const adminEmail = req.headers["x-admin-email"];
     if (!adminEmail) return null;
@@ -100,11 +110,13 @@ async function getAdminFromHeader(req) {
 }
 
 /* 🔥 ROOT ROUTE (FIX FOR CANNOT GET /) */
+// Quick test route to confirm backend is live.
 app.get("/", (req, res) => {
     res.send("SkyroX Gym Backend is Running 🚀");
 });
 
 /* REGISTER */
+// Register a brand-new client or connect an existing manual-entry member.
 app.post("/register", async (req, res) => {
     try {
         const { name, email, password, phone } = req.body;
@@ -170,6 +182,7 @@ app.post("/register", async (req, res) => {
 });
 
 /* LOGIN */
+// Login route validates credentials and returns the saved profile.
 app.post("/login", async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -195,6 +208,7 @@ app.post("/login", async (req, res) => {
 });
 
 /* GET USER */
+// Used by frontend to refresh one user's latest membership details.
 app.get("/user/:email", async (req, res) => {
     try {
         const user = await User.findOne({ email: normalizeEmail(req.params.email) });
@@ -208,6 +222,7 @@ app.get("/user/:email", async (req, res) => {
     }
 });
 
+// Save gym admission and subscription information for a client.
 app.post("/admission", async (req, res) => {
     try {
         const { email, phone, plan, subscriptionStart, subscriptionEnd, admissionDate } = req.body;
@@ -246,6 +261,7 @@ app.post("/admission", async (req, res) => {
     }
 });
 
+// Admin dashboard loads all client records from this route.
 app.get("/members", async (req, res) => {
     try {
         const adminUser = await getAdminFromHeader(req);
@@ -275,6 +291,7 @@ app.get("/members", async (req, res) => {
     }
 });
 
+// Admin manual-entry route creates or updates member records.
 app.post("/admin/members", async (req, res) => {
     try {
         const adminUser = await getAdminFromHeader(req);
@@ -345,6 +362,7 @@ app.post("/admin/members", async (req, res) => {
     }
 });
 
+// Remove a client record completely from the database.
 app.delete("/admin/members/:email", async (req, res) => {
     try {
         const adminUser = await getAdminFromHeader(req);
@@ -367,6 +385,7 @@ app.delete("/admin/members/:email", async (req, res) => {
     }
 });
 
+// Extend a member's subscription directly from admin controls.
 app.patch("/admin/members/:email/extend", async (req, res) => {
     try {
         const adminUser = await getAdminFromHeader(req);
@@ -412,6 +431,7 @@ app.patch("/admin/members/:email/extend", async (req, res) => {
     }
 });
 
+// Update the current admin's own profile settings.
 app.patch("/admin/profile", async (req, res) => {
     try {
         const adminUser = await getAdminFromHeader(req);
@@ -461,13 +481,16 @@ app.patch("/admin/profile", async (req, res) => {
 });
 
 /* START SERVER (FIXED PORT) */
+// Use port 5000 by default unless deployment overrides it.
 const PORT = process.env.PORT || 5000;
 
+// Start the backend server.
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
 
 /* ENSURE ADMIN */
+// Seed the admin after MongoDB connection is ready.
 mongoose.connection.once("open", async () => {
     try {
         await ensureAdminUser();

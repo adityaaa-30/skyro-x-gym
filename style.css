@@ -1,4 +1,5 @@
 :root {
+    /* Global color and theme tokens used across the public website */
     --bg-dark: #05070b;
     --bg-panel: #0d1118;
     --bg-panel-2: #111827;
@@ -19,6 +20,7 @@
 }
 
 body {
+    /* Layered gradients create the dark premium look for the public site */
     font-family: 'Rajdhani', sans-serif;
     line-height: 1.6;
     color: var(--white);

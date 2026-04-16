@@ -1,4 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
+    // This shared script runs only on pages where the client login form exists.
     const API_BASE_URL = window.API_BASE_URL || "http://localhost:5000";
     const loginForm = document.getElementById("loginForm");
 
@@ -10,6 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const passwordInput = document.getElementById("password");
     const loginBtn = document.querySelector(".login-btn");
 
+    // Inject inline validation message elements under email/password fields.
     ["email", "password"].forEach((id) => {
         const input = document.getElementById(id);
         const parent = input.parentNode;
@@ -26,6 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const emailError = document.getElementById("emailError");
     const passwordError = document.getElementById("passwordError");
 
+    // Add simple focus styles to make the form feel more interactive.
     [emailInput, passwordInput].forEach((input) => {
         input.addEventListener("focus", function () {
             this.parentNode.style.border = "2px solid #1273ff";
@@ -48,6 +51,7 @@ document.addEventListener("DOMContentLoaded", () => {
         el.style.display = "none";
     }
 
+    // Safely parse server responses even when backend returns plain text or HTML.
     async function readJsonSafe(res) {
         const text = await res.text();
 
@@ -58,6 +62,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    // Validate email format before attempting login.
     function validateEmail() {
         const email = emailInput.value.trim();
         const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -76,6 +81,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return true;
     }
 
+    // Validate password length before sending request to backend.
     function validatePassword() {
         const password = passwordInput.value;
 
@@ -93,6 +99,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return true;
     }
 
+    // Send login request, store session details, then redirect by role.
     async function handleLogin() {
         loginBtn.innerHTML = "Logging...";
         loginBtn.disabled = true;
@@ -136,6 +143,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    // Submit only after the local validation checks succeed.
     loginForm.addEventListener("submit", (e) => {
         e.preventDefault();
 

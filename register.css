@@ -1,4 +1,5 @@
- :root {
+:root {
+    /* Theme tokens used by the register page */
     --bg-dark: #05070b;
     --panel: rgba(10, 16, 27, 0.94);
     --blue: #1273ff;
@@ -16,6 +17,7 @@
 }
 
 body {
+    /* Center the registration card on the page */
     font-family: 'Poppins', sans-serif;
     background:
         radial-gradient(circle at top left, rgba(18, 115, 255, 0.2), transparent 28%),
@@ -28,6 +30,7 @@ body {
     padding: 20px;
 }
 
+/* Register page card wrapper */
 .login-container {
     background: var(--panel);
     backdrop-filter: blur(10px);
@@ -58,6 +61,7 @@ body {
     50% { background-position: 100% 50%; }
 }
 
+/* Brand/logo block */
 .logo {
     text-align: center;
     margin-bottom: 30px;
@@ -89,6 +93,7 @@ body {
     text-shadow: 0 0 10px rgba(255, 212, 71, 0.35);
 }
 
+/* Input wrapper for each register field */
 .form-group {
     margin-bottom: 25px;
     position: relative;
@@ -121,6 +126,7 @@ body {
     font-size: 1.1rem;
 }
 
+/* Submit button reused for account creation */
 .login-btn {
     width: 100%;
     padding: 16px;
@@ -197,6 +203,7 @@ body {
 }
 
 
+/* Helper link styling kept for optional future links */
 .register-link {
     text-align: center;
     margin-top: 25px;
@@ -219,6 +226,7 @@ body {
     color: var(--yellow);
 }
 
+/* Mobile spacing adjustments */
 @media (max-width: 480px) {
     .login-container {
         padding: 30px 25px;

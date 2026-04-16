@@ -11,12 +11,14 @@
     <link rel="stylesheet" href="login.css">
 </head>
 <body>
+    <!-- Login page used by regular clients -->
     <div class="login-container">
         <div class="logo">
             <img src="assets/skyro-x-logo.png" alt="Skyro-X Gym logo">
             <h1><span>Skyro-X</span> Gym</h1>
         </div>
 
+        <!-- Client login form -->
         <form id="loginForm">
             <div class="form-group">
                 <input type="email" id="email" placeholder="Email Address" required>
@@ -42,12 +44,14 @@
             <a href="register.html">Create Account</a>
         </div>
 
+        <!-- Separate link for staff/admin access -->
         <div class="register-link secondary-link">
             <p>Gym staff access</p>
             <a href="admin-login.html">Open Admin Login</a>
         </div>
     </div>
 
+    <!-- Shared API config + reusable client login script -->
     <script src="api-config.js?v=5"></script>
     <script src="script.js?v=5"></script>
 </body>
